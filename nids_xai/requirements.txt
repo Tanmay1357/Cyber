@@ -1,0 +1,86 @@
+# =============================================================================
+# NIDS-XAI Project Dependencies
+# Network Intrusion Detection System with Explainable AI
+# =============================================================================
+# Version: 3.0 - Enhanced with GUI and Cross-Dataset Support
+# =============================================================================
+
+# Core Machine Learning
+numpy>=1.21.0
+pandas>=1.3.0
+scikit-learn>=1.0.0
+joblib>=1.1.0
+
+# Progress Indicators
+tqdm>=4.62.0
+
+# Explainable AI Libraries
+shap>=0.41.0
+lime>=0.2.0
+
+# Visualization
+matplotlib>=3.5.0
+seaborn>=0.11.0
+pillow>=9.0.0
+
+# =============================================================================
+# Optional Dependencies
+# =============================================================================
+
+# PCAP Processing (for real attack testing)
+scapy>=2.4.5   # Requires Npcap on Windows: https://nmap.org/npcap/
+psutil>=5.9.0  # Network interface enumeration for live monitor
+
+# Web Dashboard (FastAPI backend for React UI)
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+
+# Tests
+pytest>=8.0.0
+httpx>=0.27.0  # required for fastapi.testclient
+
+# Optional extras (graceful fallback if missing)
+xgboost>=2.0.0      # alternate classifier
+reportlab>=4.0.0    # alert PDF report export
+
+# Deep Learning (optional, for future extensions)
+# tensorflow>=2.10.0
+# torch>=1.12.0
+
+# =============================================================================
+# Installation Instructions
+# =============================================================================
+#
+# 1. Create a virtual environment (recommended):
+#    python -m venv venv
+#    venv\Scripts\activate     (Windows)
+#    source venv/bin/activate  (Linux/Mac)
+#
+# 2. Install dependencies:
+#    pip install -r requirements.txt
+#
+# 3. Verify installation:
+#    python -c "import sklearn, shap, lime, fastapi; print('All dependencies OK!')"
+#
+# =============================================================================
+# Quick Install (core only, no GUI)
+# =============================================================================
+#
+#    pip install numpy pandas scikit-learn joblib tqdm shap lime matplotlib
+#
+# =============================================================================
+# Troubleshooting
+# =============================================================================
+#
+# SHAP installation issues:
+#    pip install shap --no-cache-dir
+#
+# Scapy on Windows requires Npcap:
+#    https://nmap.org/npcap/
+#
+# Memory errors during data loading:
+#    - Reduce CHUNK_SIZE in config/config.py
+#    - Reduce MAX_TRAINING_SAMPLES in config/config.py
+#
+# =============================================================================

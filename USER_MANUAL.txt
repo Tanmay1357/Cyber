@@ -1,0 +1,258 @@
+===============================================================================
+ AI-POWERED NETWORK INTRUSION DETECTION SYSTEM WITH EXPLAINABLE AI (NIDS-XAI)
+ USER MANUAL
+===============================================================================
+
+ Author      : Shayaam Shaheem  (S082246)
+ Supervisor  : Ibrahim Thoriq
+ Institution : Faculty of Engineering, Science and Technology,
+               The Maldives National University
+
+ This manual explains how to install, run and use the system. Read the
+ sections in order the first time.
+
+-------------------------------------------------------------------------------
+ CONTENTS
+-------------------------------------------------------------------------------
+   1. About the system
+   2. System requirements
+   3. Installation
+   4. Adding the datasets (optional)
+   5. Starting the system (web dashboard)
+   6. Using the dashboard, screen by screen
+   7. Running the live detection demo
+   8. Using the command line interface (alternative)
+   9. Shutting down
+  10. Troubleshooting
+  11. Notes and limitations
+
+-------------------------------------------------------------------------------
+ 1. ABOUT THE SYSTEM
+-------------------------------------------------------------------------------
+
+ NIDS-XAI is a Network Intrusion Detection System that classifies network
+ traffic as normal (benign) or malicious (attack) using a machine learning
+ model (Random Forest), and explains every decision in plain English using
+ two techniques, SHAP and LIME. A second model names the type of attack, such
+ as port scanning, denial of service or brute force.
+
+ The system has two parts:
+   - A backend (Python / FastAPI) that does the detection and explanation.
+   - A web dashboard (React) that shows live alerts, charts and explanations.
+
+-------------------------------------------------------------------------------
+ 2. SYSTEM REQUIREMENTS
+-------------------------------------------------------------------------------
+
+ - Windows 10 or 11
+ - Python 3.10 or higher   ->  https://www.python.org/downloads/
+       During installation, tick "Add Python to PATH".
+ - Node.js 18 or higher    ->  https://nodejs.org/   (for the dashboard)
+ - 8 GB RAM (16 GB recommended if you plan to train the model)
+ - About 5 GB free disk space
+
+-------------------------------------------------------------------------------
+ 3. INSTALLATION
+-------------------------------------------------------------------------------
+
+ Copy this whole folder from the disc to your hard drive first. Then:
+
+ BACKEND
+   1. Open the folder:  nids_xai
+   2. Double-click:     setup.bat
+      This creates a virtual environment and installs all Python
+      dependencies. Wait until you see "Setup Complete".
+
+   If double-clicking does not work, open Command Prompt in that folder and
+   run these commands one by one:
+        python -m venv venv
+        venv\Scripts\activate
+        pip install -r requirements.txt
+
+ FRONTEND (web dashboard)
+   1. Open Command Prompt in:  web
+   2. Run:
+        npm install
+      Wait until it finishes (it downloads the dashboard's libraries).
+
+-------------------------------------------------------------------------------
+ 4. ADDING THE DATASETS (OPTIONAL)
+-------------------------------------------------------------------------------
+
+ A trained model is already included, so you can run detection without the
+ raw datasets. You only need the datasets if you want to re-train the model.
+
+ The datasets may already be present in nids_xai\data\raw\ (in the full
+ download). If that folder already contains the CSV files, you can skip this
+ step. Otherwise, place the CSV files here:
+      nids_xai\data\raw\CIC-IDS-2017\
+      nids_xai\data\raw\CIC-IDS-2018\
+
+ To get them, either use the Google Drive link in README.txt, or download
+ from the official sources:
+      CIC-IDS2017 : https://www.unb.ca/cic/datasets/ids-2017.html
+      CIC-IDS2018 : https://www.unb.ca/cic/datasets/ids-2018.html
+
+-------------------------------------------------------------------------------
+ 5. STARTING THE SYSTEM (WEB DASHBOARD)
+-------------------------------------------------------------------------------
+
+ EASIEST WAY
+   Double-click START.bat in the main folder, then open a web browser at:
+        http://localhost:5173
+
+ MANUAL WAY (if you prefer, or if START.bat is unavailable)
+   Open TWO Command Prompt windows.
+
+   Window 1 - start the backend:
+        cd nids_xai
+        venv\Scripts\activate
+        uvicorn api.main:app --host 0.0.0.0 --port 8000
+     Leave this window open. It should say "NIDS-XAI API started".
+
+   Window 2 - start the dashboard:
+        cd web
+        npm run dev
+     It will print a local address, usually:
+        http://localhost:5173
+
+   Open that address in your web browser (Chrome or Edge recommended).
+
+-------------------------------------------------------------------------------
+ 6. USING THE DASHBOARD, SCREEN BY SCREEN
+-------------------------------------------------------------------------------
+
+ The dashboard has these pages (links along the top / side):
+
+ DASHBOARD
+   The live monitoring view. At the top are the summary cards:
+     - Attacks Detected : number of flows classified as attacks
+     - Benign Flows     : number of flows classified as normal
+     - Threat Rate      : percentage of traffic that was malicious
+     - Avg Confidence   : how sure the model was, on average
+   Below are the live traffic chart and the stream of alerts as they arrive.
+
+ ALERTS
+   The full list of alerts, newest first. Use the filter buttons to show
+   All, Attacks only, or Benign only. Click any alert to open its
+   explanation.
+
+ XAI / EXPLAIN
+   Shows why a chosen alert was classified the way it was:
+     - A SHAP chart of the features that drove the decision.
+     - A plain-English summary of the reasoning.
+     - The LIME view (rules) for the same alert.
+     - For attacks, the predicted attack type and confidence.
+
+ TRAIN
+   Trains a new model on a chosen dataset. Progress is streamed live. When
+   finished, the accuracy and other metrics are shown. (Requires the raw
+   datasets from section 4.)
+
+ EVALUATE
+   Tests the current model and reports Accuracy, Precision, Recall, F1 and
+   ROC-AUC, along with the confusion matrix, ROC curve and a per-attack-type
+   accuracy breakdown.
+
+ CLASSIFY
+   Upload a CSV file of network flows. The system classifies each row as
+   benign or attack, names the attack type, and can explain each decision.
+   Sample CSV files are provided in:
+        nids_xai\examples\test_csvs\
+
+ SETTINGS
+   Choose which trained model to load, adjust the decision threshold, and
+   switch between light and dark themes.
+
+-------------------------------------------------------------------------------
+ 7. RUNNING THE LIVE DETECTION DEMO
+-------------------------------------------------------------------------------
+
+ To see live detection and explanations end to end:
+
+   1. Start the system (section 5) and open the Dashboard.
+   2. Go to the CLASSIFY page, or start a replay, using one of the sample
+      files, for example:
+          nids_xai\examples\test_csvs\cicids2018_mixed_attacks.csv
+   3. Watch the Dashboard: alerts appear in real time, the cards update, and
+      each attack can be opened to see its SHAP and LIME explanation and its
+      attack type.
+
+ This demonstrates the whole pipeline: detection, attack-type naming and
+ explanation, streamed live to the dashboard.
+
+-------------------------------------------------------------------------------
+ 8. USING THE COMMAND LINE INTERFACE (ALTERNATIVE)
+-------------------------------------------------------------------------------
+
+ The system can also be run without the web dashboard, from a text menu:
+
+      cd nids_xai
+      venv\Scripts\activate
+      python main.py
+
+ Menu options:
+      1. Load and Preprocess Data
+      2. Load Saved Data (Quick)
+      3. Train Model
+      4. Evaluate Model
+      5. Test and Explain Predictions
+      6. Classify New CSV File
+      7. View Status
+      8. Exit
+
+-------------------------------------------------------------------------------
+ 9. SHUTTING DOWN
+-------------------------------------------------------------------------------
+
+ - Close the web browser tab.
+ - In each Command Prompt window that is running a server, press Ctrl + C,
+   then close the window.
+
+-------------------------------------------------------------------------------
+ 10. TROUBLESHOOTING
+-------------------------------------------------------------------------------
+
+ "python is not recognized"
+     Python is not installed or not on PATH. Reinstall Python and tick
+     "Add Python to PATH".
+
+ "npm is not recognized"
+     Node.js is not installed. Install it from https://nodejs.org/ and
+     restart the Command Prompt.
+
+ The dashboard opens but shows no data
+     Make sure the backend window (uvicorn) is running and says
+     "NIDS-XAI API started". The dashboard needs the backend to be up.
+
+ Port already in use
+     Another program is using port 8000 or 5173. Close it, or change the
+     port (for the backend, use --port 8001 and update the dashboard's API
+     address accordingly).
+
+ SHAP installation fails during setup
+     In the activated environment, run:
+         pip install shap --no-cache-dir
+
+ Out of memory while training
+     Reduce CHUNK_SIZE and MAX_TRAINING_SAMPLES in
+     nids_xai\config\config.py
+
+-------------------------------------------------------------------------------
+ 11. NOTES AND LIMITATIONS
+-------------------------------------------------------------------------------
+
+ - The system detects and explains intrusions. It does not block or prevent
+   traffic. It is intended for use in a controlled laboratory setting.
+
+ - It is trained and evaluated on the CIC-IDS2017 and CIC-IDS2018 benchmark
+   datasets. Live traffic captured with different tools may not match the
+   exact feature format the model was trained on, which is why the live
+   demonstration replays dataset flows through the real detection pipeline.
+
+ - The CIC-IDS datasets belong to the Canadian Institute for Cybersecurity
+   and are used here for academic purposes only.
+
+===============================================================================
+ End of User Manual
+===============================================================================

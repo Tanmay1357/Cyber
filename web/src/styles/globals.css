@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:              #f8fafc;
+  --surface:         #ffffff;
+  --border:          #e2e8f0;
+  --border-subtle:   #f1f5f9;
+  --text:            #0f172a;
+  --text-muted:      #64748b;
+  --text-faint:      #94a3b8;
+  --text-xfaint:     #cbd5e1;
+
+  --threat:          #dc2626;
+  --threat-light:    #fee2e2;
+  --threat-border:   #fca5a5;
+  --threat-hover:    #fee2e2;
+
+  --benign:          #059669;
+  --benign-light:    #d1fae5;
+  --benign-border:   #6ee7b7;
+  --benign-hover:    #dcfce7;
+
+  --accent:          #2563eb;
+  --accent-light:    #eff6ff;
+  --accent-border:   #93c5fd;
+
+  --amber:           #d97706;
+  --amber-light:     #fffbeb;
+  --amber-border:    #fcd34d;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --radius-sm:   5px;
+  --radius:      8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 3px rgba(15,23,42,.06);
+  --shadow:    0 4px 16px rgba(15,23,42,.08);
+  --shadow-lg: 0 8px 32px rgba(15,23,42,.1);
+}
+
+html[data-theme='dark'] {
+  --bg:              #0b1020;
+  --surface:         #131a2c;
+  --border:          #243049;
+  --border-subtle:   #1b2238;
+  --text:            #f1f5f9;
+  --text-muted:      #94a3b8;
+  --text-faint:      #64748b;
+  --text-xfaint:     #475569;
+
+  --threat:          #f87171;
+  --threat-light:    #3f1d1d;
+  --threat-border:   #7f1d1d;
+
+  --benign:          #34d399;
+  --benign-light:    #064e3b;
+  --benign-border:   #047857;
+
+  --accent:          #60a5fa;
+  --accent-light:    #1e3a8a;
+  --accent-border:   #2563eb;
+
+  --amber:           #fbbf24;
+  --amber-light:     #422006;
+  --amber-border:    #92400e;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.3);
+  --shadow:    0 4px 16px rgba(0,0,0,.4);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.5);
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--border-subtle), var(--border), var(--border-subtle));
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+/* Recharts tooltips: theme them so text stays readable in dark mode.
+   Recharts defaults the label/item text to dark, which is invisible on the
+   dark tooltip surface. */
+.recharts-default-tooltip {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 6px;
+}
+.recharts-tooltip-label,
+.recharts-default-tooltip .recharts-tooltip-item,
+.recharts-default-tooltip .recharts-tooltip-item-name,
+.recharts-default-tooltip .recharts-tooltip-item-separator,
+.recharts-default-tooltip .recharts-tooltip-item-value {
+  color: var(--text) !important;
+}

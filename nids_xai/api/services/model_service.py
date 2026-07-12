@@ -1,0 +1,125 @@
+import json
+import joblib
+from pathlib import Path
+from typing import Dict, Optional
+
+# Resolve paths relative to nids_xai/
+_BASE = Path(__file__).parent.parent.parent
+_MODEL_DIR = _BASE / "models"
+_METADATA_FILE = _MODEL_DIR / "model_metadata.json"
+
+
+class ModelService:
+    """Singleton that owns the loaded model and preprocessor."""
+
+    def __init__(self):
+        self._model = None
+        self._preprocessor = None
+        self._feature_names = []
+        self._current_file: Optional[str] = None
+        self._metadata: Optional[Dict] = None
+
+    # -- public properties --------------------------------------------------
+
+    @property
+    def model(self):
+        return self._model
+
+    @property
+    def preprocessor(self):
+        return self._preprocessor
+
+    @property
+    def feature_names(self):
+        return self._feature_names
+
+    @property
+    def dataset(self) -> Optional[str]:
+        return self._metadata.get("dataset") if self._metadata else None
+
+    @property
+    def is_loaded(self) -> bool:
+        return self._model is not None
+
+    # -- public methods -----------------------------------------------------
+
+    def list_models(self) -> Dict:
+        """Return contents of model_metadata.json (empty dict if absent)."""
+        if not _METADATA_FILE.exists():
+            return {}
+        with open(_METADATA_FILE) as f:
+            return json.load(f)
+
+    def status(self) -> Dict:
+        return {
+            "loaded": self.is_loaded,
+            "model_file": self._current_file,
+            "dataset": self.dataset,
+            "metadata": self._metadata,
+            "feature_count": len(self._feature_names),
+        }
+
+    def load(self, model_filename: str) -> Dict:
+        """Load a model + matching preprocessor by filename."""
+        model_path = _MODEL_DIR / model_filename
+        if not model_path.exists():
+            raise FileNotFoundError(f"Model not found: {model_filename}")
+
+        saved = joblib.load(model_path)
+        self._model = saved.get("model") or saved  # handle both wrapped and raw
+        self._feature_names = saved.get("feature_names", [])
+
+        # Load matching preprocessor as a proper Preprocessor instance
+        import sys
+        sys.path.insert(0, str(_BASE))
+        from src.preprocessor import Preprocessor
+        dataset = self._resolve_dataset(model_filename)
+        prep = Preprocessor()
+        try:
+            prep.load(dataset)
+            self._preprocessor = prep
+        except FileNotFoundError:
+            try:
+                prep.load(None)  # fallback to generic preprocessor.joblib
+                self._preprocessor = prep
+            except FileNotFoundError:
+                self._preprocessor = None
+
+        # Record metadata
+        all_meta = self.list_models()
+        self._metadata = all_meta.get(model_filename, {"dataset": dataset})
+        self._current_file = model_filename
+
+        # Invalidate any cached SHAP/LIME explainer so it rebuilds against the
+        # newly loaded model (local import avoids a circular dependency).
+        from api.services.explainer_service import explainer_service
+        explainer_service.reset()
+        from api.services.type_classifier_service import type_classifier_service
+        type_classifier_service.reset()
+
+        return self.status()
+
+    def load_latest(self) -> Optional[Dict]:
+        """Load the most recently used model from metadata. Returns None if none exist."""
+        models = self.list_models()
+        if not models:
+            return None
+        latest = max(models.items(), key=lambda kv: kv[1].get("last_used", ""), default=None)
+        if latest:
+            try:
+                return self.load(latest[0])
+            except FileNotFoundError:
+                return None
+        return None
+
+    # -- helpers ------------------------------------------------------------
+
+    def _resolve_dataset(self, filename: str) -> str:
+        """Infer dataset (2017/2018) from filename or fall back to default."""
+        if "2018" in filename:
+            return "2018"
+        return "2017"
+
+
+# Global singleton
+model_service = ModelService()

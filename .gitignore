@@ -1,0 +1,89 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.xml
+
+# Node / React
+node_modules/
+web/dist/
+web/.vite/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Datasets (large CSV/PCAP files — never commit)
+nids_xai/data/raw/
+nids_xai/data/processed/
+*.pcap
+*.pcapng
+
+# Compiled models (large joblib files)
+nids_xai/models/*.joblib
+
+# Outputs
+nids_xai/outputs/
+
+# Submission & distribution artifacts (kept off GitHub — huge / binary)
+/Software/
+/submission/
+*.zip
+/New folder/
+/example/
+/fyp final ppt/
+
+# Office lock/temp files
+~$*
+
+# Scratch notes
+troubleshoot.txt
+incase.txt
+
+# Report-building scripts, forms, and other students' samples (not the deliverable)
+/printing/
+/chapter4_diagrams/
+/chapter5_docx/
+final FYP 082208-print.pdf
+Project HandBook v2025 BCS.pdf
+
+# Old / duplicate report & presentation versions (keeping only the finals)
+Final.docx
+Final.pdf
+FYP Doc Final.pdf
+Final (AutoRecovered).docx
+Final Presentation.pptx
+mid point final version.pptx
+Artifact submission in google drive.docx
+Turnitin - Originality Report - s082246 FYP Report old.pdf
+nids_xai/examples/test_csvs/live_captures/
+nids_xai/data/
+nids_xai/models/
+/DOS wireshark captures/
+
+# AI assistant tooling (local only)
+.claude/
+CLAUDE.md
+.superpowers/
