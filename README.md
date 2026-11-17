@@ -124,20 +124,54 @@ once and the processed cache and `.joblib` files are created locally.
 
 ---
 
-## Running
+## Run Instructions
 
-### Web dashboard (backend + frontend)
+### Quick Start
 
 ```bash
-# Terminal 1 — backend (from nids_xai/)
-uvicorn api.main:app --host 0.0.0.0 --port 8000
+# 1. Backend (Python 3.10+)
+cd nids_xai
+pip install -r requirements.txt
+uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
-# Terminal 2 — frontend (from web/)
-npm run dev
+# 2. Frontend
+cd web
+npm install
+npm run dev        # dev server on :5173
+# or npm run build to build for production
 ```
 
-Open the dashboard at the Vite URL (default http://localhost:5173). The backend
-serves the API on http://localhost:8000.
+### Configuration
+
+Key environment variables:
+- `NIDS_ENFORCEMENT_MODE` — `monitor` (default), `dry_run`, or `enforce`
+- `NIDS_BLOCK_TTL` — block TTL in seconds (default: 3600)
+- `NIDS_IP_WHITELIST` — comma-separated IPs never to block (default: 127.0.0.1,::1)
+
+### API Endpoints (new in this release)
+
+- `GET /api/blocked` — list blocked IPs
+- `POST /api/unblock/{ip}` — unblock an IP
+- `GET /api/prevention/mode` — current enforcement mode
+- `POST /api/prevention/mode` — set enforcement mode
+- `POST /api/feedback` — submit true_positive/false_positive feedback
+- `GET /api/feedback` — list feedback entries
+
+### Running Tests
+
+```bash
+cd nids_xai
+pytest tests/ -v
+```
+
+### Retraining with Feedback
+
+```bash
+cd nids_xai
+python scripts/retrain.py --dataset 2017
+# A versioned model is saved to models/ — it is NOT auto-deployed.
+# Review it, then manually copy it to replace nids_model_2017.joblib.
+```
 
 ### CLI
 
@@ -182,10 +216,20 @@ Typical results: ~98% accuracy on both datasets; attack-type accuracy 96–99.7%
 
 ```bash
 cd nids_xai
-pytest
+pytest tests/ -v
 ```
 
 See `docs/TESTING.md` for details.
+
+---
+
+## ⚠️ ENFORCE MODE WARNING
+
+> **CAUTION: `enforce` mode calls `iptables` to block source IPs.**
+>
+> Only run with `NIDS_ENFORCEMENT_MODE=enforce` inside an **isolated VM or container** (e.g., a dedicated Kali/Ubuntu lab VM with no production traffic). Never use enforce mode on a production host, shared server, or your development machine — it will block legitimate traffic.
+>
+> Default mode is `dry_run`, which logs what would be blocked without actually blocking anything.
 
 ---
 

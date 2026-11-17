@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from api.routers import (
     status, model, monitor, alerts, explain, train, evaluate, classify,
+    prevention, feedback,
 )
 from api.ws import alerts_ws, stats_ws, training_ws
 from api.services.model_service import model_service
@@ -59,6 +60,8 @@ def create_app() -> FastAPI:
     app.include_router(train.router)
     app.include_router(evaluate.router)
     app.include_router(classify.router)
+    app.include_router(prevention.router)
+    app.include_router(feedback.router)
     app.include_router(alerts_ws.router)
     app.include_router(stats_ws.router)
     app.include_router(training_ws.router)

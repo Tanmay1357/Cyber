@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import http from '../api/http'
+import AlertExplanation from './AlertExplanation'
 
 function FeatureBar({ label, value, direction, scale = 0.5 }) {
   const abs   = Math.abs(value)
@@ -40,10 +41,12 @@ export default function ShapPanel({ selectedId, onClose }) {
   const [limeErr, setLimeErr] = useState(null)
   const [typeExp, setTypeExp] = useState(null)
   const [typeLoading, setTypeLoading] = useState(false)
+  const [feedbackSaved, setFeedbackSaved] = useState(false)
 
   // Fetch both SHAP (fast) and LIME (slow) when the selected alert changes.
   useEffect(() => {
     setShap(null); setLime(null); setShapErr(null); setLimeErr(null); setTypeExp(null)
+    setFeedbackSaved(false)
     if (!selectedId) return
 
     setTypeLoading(true)
@@ -222,6 +225,26 @@ export default function ShapPanel({ selectedId, onClose }) {
             </p>
           </div>
         </div>
+      )}
+
+      {/* Feedback */}
+      {selectedId && (
+        <>
+          <AlertExplanation
+            alert={{ id: selectedId, explanation: shap?.summary ? [shap.summary] : [] }}
+            onFeedback={() => setFeedbackSaved(true)}
+          />
+          {feedbackSaved && (
+            <div style={{
+              margin: '0 22px 12px',
+              padding: '6px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+              background: 'var(--benign-light)', color: 'var(--benign)',
+              border: '1px solid #bbf7d0', display: 'inline-flex', alignItems: 'center', gap: 6,
+            }}>
+              ✓ Feedback saved
+            </div>
+          )}
+        </>
       )}
     </div>
   )

@@ -462,3 +462,30 @@ MONITOR_MIN_FLOW_PACKETS    = 1      # min packets before flow is classified
 MONITOR_TOAST_DURATION_MS   = 5000   # ms before toast auto-dismisses
 MONITOR_MAX_TOASTS          = 3      # max simultaneous toast overlays
 MONITOR_LOG_FEATURES        = True   # log each flow's raw feature vector (live debug)
+
+# =============================================================================
+# Risk Score Configuration
+# =============================================================================
+RISK_WEIGHT_ML = 0.7       # weight for ML attack probability
+RISK_WEIGHT_RULE = 0.3     # weight for rule engine score
+RISK_LEVELS = {
+    "LOW":      (0,  39),
+    "MEDIUM":   (40, 69),
+    "HIGH":     (70, 89),
+    "CRITICAL": (90, 100),
+}
+
+# =============================================================================
+# Prevention / Enforcement Configuration
+# =============================================================================
+import os as _os
+ENFORCEMENT_MODE = _os.environ.get("NIDS_ENFORCEMENT_MODE", "dry_run")
+# Allowed values: "monitor" (default), "dry_run", "enforce"
+# "enforce" mode calls iptables — ONLY use in an isolated VM/container!
+
+BLOCK_TTL_SECONDS = int(_os.environ.get("NIDS_BLOCK_TTL", "3600"))  # 1 hour default
+IP_WHITELIST = set(_os.environ.get("NIDS_IP_WHITELIST", "127.0.0.1,::1").split(","))
+# Add your gateway IP via env: NIDS_IP_WHITELIST=127.0.0.1,::1,192.168.1.1
+IPTABLES_CHAIN = "NIDS_BLOCK"
+FEEDBACK_FILE = str(PROJECT_ROOT / "data" / "feedback.json")
+

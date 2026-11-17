@@ -7,6 +7,14 @@ import time
 from collections import deque
 from typing import Dict, List, Optional
 
+try:
+    from rules.engine import evaluate_flow as _rules_evaluate_flow
+    from rules.engine import compute_rule_score as _rules_compute_score
+    from rules.risk_score import compute_risk_score as _compute_risk_score
+    _RULES_AVAILABLE = True
+except ImportError:
+    _RULES_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,7 +55,7 @@ def _normalise_event(raw: Dict) -> Dict:
     # benign flow (P attack = 4%) would display as "4%" and drag the average down.
     decision_conf = attack_prob if is_attack else 1.0 - attack_prob
 
-    return {
+    normalised = {
         "kind":       "flow",
         "src_ip":     raw.get("src_ip"),
         "src_port":   raw.get("src_port"),
@@ -62,6 +70,54 @@ def _normalise_event(raw: Dict) -> Dict:
         "true_type":  raw.get("true_type"),
         "features":   raw.get("features"),
     }
+
+    try:
+        if _RULES_AVAILABLE:
+            flow_meta = {
+                "dst_port":                   int(raw.get("dst_port", 0) or 0),
+                "syn_flag_count":             float(raw.get("syn_flag_count", 0) or 0),
+                "ack_flag_count":             float(raw.get("ack_flag_count", 0) or 0),
+                "connections_per_second":     float(raw.get("connections_per_second", 0) or 0),
+                "distinct_dst_ports":         int(raw.get("distinct_dst_ports", 0) or 0),
+                "connections_to_brute_ports": int(raw.get("connections_to_brute_ports", 0) or 0),
+                "flow_packets_per_s":         float(raw.get("flow_packets_per_s", 0) or 0),
+            }
+
+            matches = _rules_evaluate_flow(flow_meta)
+            rule_score = _rules_compute_score(matches)
+            risk = _compute_risk_score(attack_prob, rule_score)
+
+            explanation: List[str] = []
+            for factor in shap_raw[:3]:
+                feature = factor.get("feature", "unknown")
+                direction = factor.get("direction", "attack")
+                shap_val = float(factor.get("shap_value", 0.0))
+                explanation.append(
+                    f"Feature {feature} pushed the score {direction} (SHAP contribution: {shap_val:.3f})"
+                )
+            for m in matches:
+                explanation.append(m.reason)
+
+            normalised["risk_score"] = risk["score"]
+            normalised["risk_level"] = risk["level"]
+            normalised["matched_rules"] = [
+                {"rule_id": m.rule_id, "severity": m.severity, "reason": m.reason}
+                for m in matches
+            ]
+            normalised["explanation"] = explanation
+        else:
+            normalised["risk_score"] = 0
+            normalised["risk_level"] = "LOW"
+            normalised["matched_rules"] = []
+            normalised["explanation"] = []
+    except Exception as _rule_exc:
+        logger.debug("Rule engine enrichment failed (non-fatal): %s", _rule_exc)
+        normalised.setdefault("risk_score", 0)
+        normalised.setdefault("risk_level", "LOW")
+        normalised.setdefault("matched_rules", [])
+        normalised.setdefault("explanation", [])
+
+    return normalised
 
 
 class MonitorService:

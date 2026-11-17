@@ -2,8 +2,11 @@ import { useState } from 'react'
 import TopBar from '../components/TopBar'
 import KpiCards from '../components/KpiCards'
 import TrafficChart from '../components/TrafficChart'
+import LiveTrafficChart from '../components/LiveTrafficChart'
 import DonutChart from '../components/DonutChart'
 import AlertTable from '../components/AlertTable'
+import SuspiciousIPs from '../components/SuspiciousIPs'
+import BlockedIPs from '../components/BlockedIPs'
 import ShapPanel from '../components/ShapPanel'
 import StatusBar from '../components/StatusBar'
 import ModeToggle from '../components/ModeToggle'
@@ -68,11 +71,18 @@ export default function Dashboard() {
 
       <KpiCards stats={stats} />
 
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 240px', gap: 1, background: 'var(--border)', overflow: 'hidden', minHeight: 280 }}>
-        <TrafficChart history={stats.traffic_history} labels={stats.traffic_labels} />
-        <DonutChart attacks={stats.attacks} benign={stats.benign} />
-        <AlertTable alerts={alerts} selectedId={selectedId} onSelect={selectAlert} onClear={handleClear} />
-        <SessionPanel stats={stats} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1, overflowY: 'auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px', gap: 1, background: 'var(--border)', minHeight: 280 }}>
+          <TrafficChart history={stats.traffic_history} labels={stats.traffic_labels} />
+          <DonutChart attacks={stats.attacks} benign={stats.benign} />
+          <AlertTable alerts={alerts} selectedId={selectedId} onSelect={selectAlert} onClear={handleClear} />
+          <SessionPanel stats={stats} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1, background: 'var(--border)' }}>
+          <LiveTrafficChart history={stats.traffic_history} labels={stats.traffic_labels} />
+          <SuspiciousIPs alerts={alerts} />
+          <BlockedIPs />
+        </div>
       </div>
 
       <ShapPanel selectedId={selectedId} onClose={() => selectAlert(null)} />

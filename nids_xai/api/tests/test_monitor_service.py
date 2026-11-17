@@ -54,3 +54,28 @@ def test_normalise_error():
     result = _normalise_event(raw)
     assert result["kind"] == "error"
     assert result["message"] == "File not found"
+
+
+def test_normalise_event_risk_and_rules():
+    raw = {
+        "type": "monitor_event",
+        "src_ip": "1.2.3.4", "src_port": 100,
+        "dst_ip": "5.6.7.8", "dst_port": 80,
+        "is_alert": True,
+        "prediction": "Attack",
+        "confidence": 0.90,
+        "timestamp": "14:32:01",
+        "distinct_dst_ports": 100,  # triggers PORTSCAN_01
+        "shap_factors": [
+            {"feature": "Flow Duration", "shap_value": 0.42, "direction": "attack"},
+        ],
+    }
+    result = _normalise_event(raw)
+    assert "risk_score" in result
+    assert "risk_level" in result
+    assert "matched_rules" in result
+    assert "explanation" in result
+    assert result["risk_level"] in ("HIGH", "CRITICAL")
+    assert any(r["rule_id"] == "PORTSCAN_01" for r in result["matched_rules"])
+    assert any("Flow Duration" in exp for exp in result["explanation"])
+    assert any("port scan" in exp.lower() for exp in result["explanation"])

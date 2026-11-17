@@ -1,0 +1,33 @@
+rules:
+  - id: PORTSCAN_01
+    name: Port Scan
+    severity: HIGH
+    description: "Many distinct destination ports from one source in a time window"
+    thresholds:
+      distinct_ports: 50
+      window_seconds: 60
+
+  - id: BRUTEFORCE_01
+    name: Brute Force
+    severity: HIGH
+    description: "Many connections to SSH/FTP/RDP ports from one source"
+    thresholds:
+      target_ports: [22, 21, 3389]
+      connections: 20
+      window_seconds: 60
+
+  - id: DOS_01
+    name: DoS-like High Rate
+    severity: CRITICAL
+    description: "High connection or packet rate per source"
+    thresholds:
+      connections_per_second: 50
+      window_seconds: 10
+
+  - id: SYN_FLOOD_01
+    name: Excessive SYN without ACK
+    severity: HIGH
+    description: "High SYN flag count relative to ACK flag count"
+    thresholds:
+      syn_ack_ratio: 5.0
+      min_syn_count: 10

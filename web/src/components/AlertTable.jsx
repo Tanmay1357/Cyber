@@ -2,6 +2,25 @@ import { useState } from 'react'
 import FilterButtons from './FilterButtons'
 import { InfoTip } from './ui'
 
+const RISK_BADGE = {
+  CRITICAL: { background: '#ef4444', color: '#fff' },
+  HIGH:     { background: '#f97316', color: '#fff' },
+  MEDIUM:   { background: '#eab308', color: '#000' },
+  LOW:      { background: '#22c55e', color: '#fff' },
+}
+
+function RiskBadge({ score, level }) {
+  const style = RISK_BADGE[level] || RISK_BADGE.LOW
+  return (
+    <span style={{
+      ...style, fontSize: 9, fontWeight: 700, padding: '2px 6px',
+      borderRadius: 'var(--radius-full)', fontFamily: 'var(--font-mono)',
+    }}>
+      {level} {score != null ? score : ''}
+    </span>
+  )
+}
+
 function Row({ alert, selected, onSelect }) {
   const isAtk = alert.is_attack
   const sel = selected === alert.id
@@ -9,31 +28,55 @@ function Row({ alert, selected, onSelect }) {
   const conf = alert.confidence != null
     ? alert.confidence
     : (isAtk ? alert.attack_prob : 1 - alert.attack_prob)
+  const hasExplanation = Array.isArray(alert.explanation) && alert.explanation.length > 0
   return (
-    <tr
-      onClick={() => onSelect(alert.id)}
-      style={{
-        cursor: 'pointer',
-        background: sel
-          ? (isAtk ? 'var(--threat-light)' : 'var(--benign-light)')
-          : (isAtk ? '#fff5f5' : '#f0fdf4'),
-        borderLeft: `3px solid ${isAtk ? 'var(--threat)' : 'var(--benign)'}`,
-        outline: sel ? `1px solid ${isAtk ? 'var(--threat-border)' : 'var(--benign-border)'}` : 'none',
-        transition: 'background .12s',
-      }}
-    >
-      <td style={{ padding: '7px 10px' }}>
-        <span className={`badge badge--${isAtk ? 'attack' : 'benign'}`}>
-          {isAtk ? 'ATTACK' : 'BENIGN'}
-        </span>
-      </td>
-      <td className="mono" style={{ padding: '7px 6px', fontSize: 10, color: 'var(--text-muted)' }}>{alert.src_ip}</td>
-      <td className="mono" style={{ padding: '7px 6px', fontSize: 10, color: 'var(--text-muted)' }}>{alert.dst_ip}:{alert.dst_port}</td>
-      <td style={{ padding: '7px 6px', fontSize: 11, fontWeight: 700, color: isAtk ? 'var(--threat)' : 'var(--benign)' }}>
-        {(conf * 100).toFixed(1)}%
-      </td>
-      <td className="mono" style={{ padding: '7px 10px', fontSize: 9, color: 'var(--text-xfaint)' }}>{alert.timestamp}</td>
-    </tr>
+    <>
+      <tr
+        onClick={() => onSelect(alert.id)}
+        style={{
+          cursor: 'pointer',
+          background: sel
+            ? (isAtk ? 'var(--threat-light)' : 'var(--benign-light)')
+            : (isAtk ? '#fff5f5' : '#f0fdf4'),
+          borderLeft: `3px solid ${isAtk ? 'var(--threat)' : 'var(--benign)'}`,
+          outline: sel ? `1px solid ${isAtk ? 'var(--threat-border)' : 'var(--benign-border)'}` : 'none',
+          transition: 'background .12s',
+        }}
+      >
+        <td style={{ padding: '7px 10px' }}>
+          <span className={`badge badge--${isAtk ? 'attack' : 'benign'}`}>
+            {isAtk ? 'ATTACK' : 'BENIGN'}
+          </span>
+        </td>
+        <td className="mono" style={{ padding: '7px 6px', fontSize: 10, color: 'var(--text-muted)' }}>{alert.src_ip}</td>
+        <td className="mono" style={{ padding: '7px 6px', fontSize: 10, color: 'var(--text-muted)' }}>{alert.dst_ip}:{alert.dst_port}</td>
+        <td style={{ padding: '7px 6px', fontSize: 11, fontWeight: 700, color: isAtk ? 'var(--threat)' : 'var(--benign)' }}>
+          {(conf * 100).toFixed(1)}%
+        </td>
+        <td style={{ padding: '7px 6px' }}>
+          {alert.risk_level
+            ? <RiskBadge score={alert.risk_score} level={alert.risk_level} />
+            : <span style={{ color: 'var(--text-faint)', fontSize: 9 }}>—</span>
+          }
+        </td>
+        <td style={{ padding: '7px 6px', fontSize: 10, color: 'var(--text-muted)' }}>{alert.prediction ?? '—'}</td>
+        <td className="mono" style={{ padding: '7px 10px', fontSize: 9, color: 'var(--text-xfaint)' }}>{alert.timestamp}</td>
+      </tr>
+      {sel && hasExplanation && (
+        <tr style={{ background: sel ? (isAtk ? 'var(--threat-light)' : 'var(--benign-light)') : 'transparent' }}>
+          <td colSpan={7} style={{ padding: '4px 24px 10px', borderLeft: `3px solid ${isAtk ? 'var(--threat)' : 'var(--benign)'}` }}>
+            <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Why:
+            </span>
+            <ul style={{ margin: '4px 0 0', paddingLeft: 16 }}>
+              {alert.explanation.map((line, i) => (
+                <li key={i} style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.6 }}>{line}</li>
+              ))}
+            </ul>
+          </td>
+        </tr>
+      )}
+    </>
   )
 }
 
@@ -73,6 +116,8 @@ export default function AlertTable({ alerts, selectedId, onSelect, onClear }) {
               <th className="label" style={{ padding: '0 10px 8px', textAlign: 'left', borderBottom: '1px solid var(--border-subtle)' }}>
                 <InfoTip text="The model's confidence in the decision shown (Attack or Benign). P(attack) ≥ threshold triggers an alert.">Confidence</InfoTip>
               </th>
+              <th className="label" style={{ padding: '0 10px 8px', textAlign: 'left', borderBottom: '1px solid var(--border-subtle)' }}>Risk</th>
+              <th className="label" style={{ padding: '0 10px 8px', textAlign: 'left', borderBottom: '1px solid var(--border-subtle)' }}>Attack Type</th>
               <th className="label" style={{ padding: '0 10px 8px', textAlign: 'left', borderBottom: '1px solid var(--border-subtle)' }}>Time</th>
             </tr>
           </thead>
